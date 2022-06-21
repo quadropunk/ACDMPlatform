@@ -7,4 +7,8 @@ contract ACDMToken is ERC20 {
     constructor() ERC20("ACDMToken", "ACDM") {
         _mint(msg.sender, 10e20);
     }
+
+    function decimals() public view virtual override returns(uint8) {
+        return 6;
+    }
 }
