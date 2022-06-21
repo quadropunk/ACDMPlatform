@@ -3,7 +3,8 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
-import "../token/XXXToken.sol";
+import "../token/StakeToken.sol";
+import "../token/RewardToken.sol";
 
 contract Staking is AccessControl {
     bytes32 private constant DAO_ROLE = keccak256("DAO_ROLE");
@@ -13,8 +14,8 @@ contract Staking is AccessControl {
     mapping(address => uint256) private _balances;
 
     uint256 public immutable lockPeriod;
-    XXXToken public immutable stakingToken;
-    XXXToken public immutable rewardToken;
+    StakeToken public immutable stakingToken;
+    RewardToken public immutable rewardToken;
 
     uint256 public rewardRate = 3; // percentages
     uint256 public rewardPeriod = 1 weeks;
@@ -29,8 +30,8 @@ contract Staking is AccessControl {
         address dao
     ) {
         (stakingToken, rewardToken, lockPeriod) = (
-            XXXToken(_stakingToken),
-            XXXToken(_rewardToken),
+            StakeToken(_stakingToken),
+            RewardToken(_rewardToken),
             _lockPeriod
         );
         _grantRole(DAO_ROLE, dao);
