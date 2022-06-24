@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "../token/RewardToken.sol";
+import "./token/SomeToken.sol":
 
 contract DAO {
     using Counters for Counters.Counter;
@@ -16,19 +16,18 @@ contract DAO {
     Counters.Counter private votingsCount;
     uint256 private votingPeriod = 3 days;
 
-    RewardToken public immutable LPTokens;
-
+    SomeToken public token;
     mapping(uint256 => Voting) public votings;
     mapping(uint256 => mapping(address => bool)) public voters;
     mapping(address => mapping(uint256 => uint128)) public balances;
 
-    constructor(address _lptoken) {
-        LPTokens = RewardToken(_lptoken);
+    constructor(address _token) {
+        token = SomeToken(_token);
     }
 
     function deposit(uint256 _amount) external {
         require(_amount != 0, "DAO: Cannot deposit zero tokens");
-        LPTokens.transferFrom(msg.sender, address(this), _amount);
+        token.transfer(_msgSender(), _amount);
     }
 
     function createVoting() external {
@@ -45,7 +44,7 @@ contract DAO {
         require(_amount != 0, "DAO: Cannot vote with zero tokens");
         require(votings[_votingId].startedTime != 0, "DAO: Voting with such id does not exist");
 
-        LPTokens.transferFrom(msg.sender, address(this), _amount);
+        token.transferFrom(_msgSender(), address(this), _amount);
         balances[msg.sender][_votingId] = _amount;
         Voting storage voting = votings[_votingId];
         if (_voteFor == true)
