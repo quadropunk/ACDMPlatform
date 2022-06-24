@@ -47,6 +47,14 @@ contract ACDMPlatform {
         _;
     }
 
+    modifier updateRound() {
+        if (startTime + roundTime < block.timestamp) {
+            if (round == Rounds.Sale) round = Rounds.Trade;
+            else if (round == Rounds.Trade) round = Rounds.Sale;
+            startTime = block.timestamp;
+        } else revert("ACDMPlatform: Round period is not over yet");
+    }
+
     function register() external {
         users[msg.sender] = true;
     }
@@ -60,7 +68,7 @@ contract ACDMPlatform {
         refers[msg.sender] = _referrer;
     }
 
-    function startSaleRound() external registered {
+    function startSaleRound() external registered updateRound {
         if (startTime != 0) {
             tokenPrice = (tokenPrice * 103) / 100 + 0.000004 ether;
             require(
@@ -75,12 +83,9 @@ contract ACDMPlatform {
 
         token.burn(address(this), token.balanceOf(address(this)));
         token.mint(address(this), address(this).balance / tokenPrice);
-
-        startTime = block.timestamp;
-        round = Rounds.Sale;
     }
 
-    function buyACDM() external payable normalPrice registered {
+    function buyACDM() external payable normalPrice registered updateRound {
         require(
             round == Rounds.Sale,
             "ACDMPlatform: Sale round is not started yet"
@@ -95,7 +100,7 @@ contract ACDMPlatform {
         token.transfer(msg.sender, msg.value / tokenPrice);
     }
 
-    function startTradeRound() external registered {
+    function startTradeRound() external registered updateRound {
         require(
             round == Rounds.Trade,
             "ACDMPlatform: Trade round is already on"
@@ -104,11 +109,9 @@ contract ACDMPlatform {
             startTime + roundTime < block.timestamp,
             "ACDMPlatform: Previos round is not finished yet"
         );
-        startTime = block.timestamp;
-        round = Rounds.Trade;
     }
 
-    function addOrder(uint256 _amount) external registered {
+    function addOrder(uint256 _amount) external registered updateRound {
         require(
             round == Rounds.Trade,
             "ACDMPlatform: Trade round is not started yet"
@@ -135,6 +138,7 @@ contract ACDMPlatform {
         payable
         normalPrice
         registered
+        updateRound
     {
         require(
             users[_from] == true,
