@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./token/SomeToken.sol":
+import "./token/SomeToken.sol";
 
 contract DAO {
     using Counters for Counters.Counter;
@@ -27,7 +27,7 @@ contract DAO {
 
     function deposit(uint256 _amount) external {
         require(_amount != 0, "DAO: Cannot deposit zero tokens");
-        token.transfer(_msgSender(), _amount);
+        token.transfer(msg.sender, _amount);
     }
 
     function createVoting() external {
@@ -44,7 +44,7 @@ contract DAO {
         require(_amount != 0, "DAO: Cannot vote with zero tokens");
         require(votings[_votingId].startedTime != 0, "DAO: Voting with such id does not exist");
 
-        token.transferFrom(_msgSender(), address(this), _amount);
+        token.transferFrom(msg.sender, address(this), _amount);
         balances[msg.sender][_votingId] = _amount;
         Voting storage voting = votings[_votingId];
         if (_voteFor == true)
