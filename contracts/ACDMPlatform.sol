@@ -52,7 +52,10 @@ contract ACDMPlatform {
             if (round == Rounds.Sale) round = Rounds.Trade;
             else if (round == Rounds.Trade) round = Rounds.Sale;
             startTime = block.timestamp;
-        } else revert("ACDMPlatform: Round period is not over yet");
+        }
+        else
+            revert("ACDMPlatform: Round period is not over yet");
+        _;
     }
 
     function register() external {
