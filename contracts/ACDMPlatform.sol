@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./token/ACDMToken.sol";
+import "hardhat/console.sol";
 
 contract ACDMPlatform {
     enum Rounds {
@@ -12,6 +13,7 @@ contract ACDMPlatform {
     ACDMToken public immutable token;
 
     Rounds public round;
+
     uint256 public roundTime;
     uint256 public startTime;
     uint256 public tokenPrice = 0.00001 ether;
@@ -26,6 +28,18 @@ contract ACDMPlatform {
     constructor(address _token, uint256 _roundTime) {
         (token, roundTime) = (ACDMToken(_token), _roundTime);
     }
+
+    event Registered(address user, address referrer1, address referrer2);
+    event Bought(
+        address user,
+        address referrer1,
+        address referrer2,
+        uint256 price,
+        uint256 tokens
+    );
+    event OrderAdded(address user, uint256 amount);
+    event OrderRemoved(address user, uint256 amount);
+    event OrderRedeemed(address from, address to, uint256 amount);
 
     modifier normalPrice() {
         require(
@@ -48,18 +62,31 @@ contract ACDMPlatform {
     }
 
     modifier updateRound() {
-        if (startTime + roundTime < block.timestamp) {
-            if (round == Rounds.Sale) round = Rounds.Trade;
-            else if (round == Rounds.Trade) round = Rounds.Sale;
+        if (startTime == 0) {
+            round = Rounds.Sale;
+            startTime = block.timestamp;
+        } else if (startTime + roundTime < block.timestamp) {
+            if (round == Rounds.Sale) {
+                round = Rounds.Trade;
+            } else if (round == Rounds.Trade) {
+                round = Rounds.Sale;
+                tokenPrice = (tokenPrice * 103) / 100 + 0.000004 ether;
+                token.burn(address(this), token.balanceOf(address(this)));
+                token.mint(address(this), address(this).balance / tokenPrice);
+            }
             startTime = block.timestamp;
         }
-        else
-            revert("ACDMPlatform: Round period is not over yet");
+
         _;
     }
 
     function register() external {
+        require(
+            users[msg.sender] == false,
+            "ACDMPlatform: You already registered"
+        );
         users[msg.sender] = true;
+        emit Registered(msg.sender, address(0), address(0));
     }
 
     function register(address _referrer) external {
@@ -69,23 +96,7 @@ contract ACDMPlatform {
         );
         users[msg.sender] = true;
         refers[msg.sender] = _referrer;
-    }
-
-    function startSaleRound() external registered updateRound {
-        if (startTime != 0) {
-            tokenPrice = (tokenPrice * 103) / 100 + 0.000004 ether;
-            require(
-                round == Rounds.Trade,
-                "ACDMPlatform: Sale round is already on"
-            );
-            require(
-                startTime + roundTime < block.timestamp,
-                "ACDMPlatform: Previous round is not finished yet"
-            );
-        }
-
-        token.burn(address(this), token.balanceOf(address(this)));
-        token.mint(address(this), address(this).balance / tokenPrice);
+        emit Registered(msg.sender, _referrer, refers[_referrer]);
     }
 
     function buyACDM() external payable normalPrice registered updateRound {
@@ -101,16 +112,12 @@ contract ACDMPlatform {
                 );
         }
         token.transfer(msg.sender, msg.value / tokenPrice);
-    }
-
-    function startTradeRound() external registered updateRound {
-        require(
-            round == Rounds.Trade,
-            "ACDMPlatform: Trade round is already on"
-        );
-        require(
-            startTime + roundTime < block.timestamp,
-            "ACDMPlatform: Previos round is not finished yet"
+        emit Bought(
+            msg.sender,
+            refers[msg.sender],
+            refers[refers[msg.sender]],
+            msg.value,
+            msg.value / tokenPrice
         );
     }
 
@@ -121,6 +128,7 @@ contract ACDMPlatform {
         );
         token.transferFrom(msg.sender, address(this), _amount);
         orderBook[msg.sender] = _amount;
+        emit OrderAdded(msg.sender, _amount);
     }
 
     function removeOrder() external registered {
@@ -133,6 +141,7 @@ contract ACDMPlatform {
             "ACDMPlatform: Trade round is not started yet"
         );
         token.transfer(msg.sender, token.balanceOf(msg.sender));
+        emit OrderRemoved(msg.sender, orderBook[msg.sender]);
         orderBook[msg.sender] = 0;
     }
 
@@ -144,13 +153,10 @@ contract ACDMPlatform {
         updateRound
     {
         require(
-            users[_from] == true,
-            "ACDMPlatform: Given user address is not registrated"
-        );
-        require(
             round == Rounds.Trade,
             "ACDMPlatform: Trade round is not started yet"
         );
+        require(orderBook[_from] != 0, "Given user does not have any order");
         uint256 tokensAmount = msg.value / tokenPrice;
         uint256 toSend = tokensAmount;
         if (refers[msg.sender] != address(0)) {
@@ -164,6 +170,10 @@ contract ACDMPlatform {
                 toSend -= (tokensAmount * 3) / 100;
             }
         }
-        token.transfer(msg.sender, msg.value / toSend);
+        token.transfer(msg.sender, toSend);
+        emit OrderRedeemed(_from, msg.sender, orderBook[_from]);
+        orderBook[_from] = 0;
     }
+
+    receive() external payable {}
 }
