@@ -140,7 +140,7 @@ contract ACDMPlatform {
             round == Rounds.Trade,
             "ACDMPlatform: Trade round is not started yet"
         );
-        token.transfer(msg.sender, token.balanceOf(msg.sender));
+        token.transfer(msg.sender, orderBook[msg.sender]);
         emit OrderRemoved(msg.sender, orderBook[msg.sender]);
         orderBook[msg.sender] = 0;
     }
@@ -156,8 +156,16 @@ contract ACDMPlatform {
             round == Rounds.Trade,
             "ACDMPlatform: Trade round is not started yet"
         );
-        require(orderBook[_from] != 0, "Given user does not have any order");
+        require(
+            orderBook[_from] != 0,
+            "ACDMPlatform: Given user does not have any order"
+        );
         uint256 tokensAmount = msg.value / tokenPrice;
+        require(
+            tokensAmount <= orderBook[_from],
+            "ACDMPlatform: Not enough tokens in the order"
+        );
+
         uint256 toSend = tokensAmount;
         if (refers[msg.sender] != address(0)) {
             token.transfer(refers[msg.sender], (tokensAmount * 5) / 100);
