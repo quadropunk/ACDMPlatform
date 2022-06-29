@@ -91,6 +91,10 @@ contract ACDMPlatform {
 
     function register(address _referrer) external {
         require(
+            users[msg.sender] == false,
+            "ACDMPlatform: You already registered"
+        );
+        require(
             users[_referrer] == true,
             "ACDMPlatform: Given referrer is not registered"
         );
