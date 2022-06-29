@@ -9,10 +9,10 @@ contract Staking is AccessControl {
 
     uint256 public immutable lockPeriod = 1 weeks;
     uint256 public immutable rewardPeriod = 1 weeks;
+    uint256 private immutable rewardRate = 3;
+
     mapping(address => uint256) public stakers;
     mapping(address => uint256) public startedTime;
-
-    uint256 private immutable rewardRate = 3;
 
     constructor(address _token) {
         token = SomeToken(_token);
