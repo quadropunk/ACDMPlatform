@@ -51,7 +51,7 @@ contract Staking is AccessControl {
 
         uint256 periods = (block.timestamp - startedTime[_msgSender()]) / rewardPeriod;
         stakers[_msgSender()] += stakers[_msgSender()] * (rewardRate * periods) / 100;
-        startedTime[_msgSender()] = block.timestamp;
+        startedTime[_msgSender()] += periods * rewardPeriod;
 
         emit Claimed(_msgSender(), stakers[_msgSender()], startedTime[_msgSender()]);
     }

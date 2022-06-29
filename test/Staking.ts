@@ -1,5 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
+import { clear } from "console";
 import { ethers, network, waffle } from "hardhat";
 import { SomeToken, Staking } from "../typechain";
 
@@ -142,7 +143,7 @@ describe("Staking", function () {
         .withArgs(
           signers[0].address,
           (stakeAmount * (100 + 3 * periods)) / 100,
-          (await waffle.provider.getBlock("latest")).timestamp
+          (await staking.rewardPeriod()).add(3 * periods)
         );
 
       expect(await staking.stakers(signers[0].address)).to.equal(
