@@ -11,57 +11,47 @@ contract DAO {
         uint256 startedTime;
         uint128 votesFor;
         uint128 votesAgainst;
-        bytes wSignature; // signature for winning case
-        bytes lSignature; // Signature for loosing case
-        address wTargetContract;
-        address lTargetContract;
+        bytes signature;
+        address targetContract;
     }
+
+    SomeToken public immutable token;
+    uint256 private immutable votingPeriod = 3 days;
+
+    Counters.Counter private votingsCount;
 
     mapping(uint256 => Voting) public votings;
     mapping(uint256 => mapping(address => bool)) public voters;
     mapping(address => mapping(uint256 => uint128)) public balances;
-
-    SomeToken public immutable token;
-
-    Counters.Counter private votingsCount;
-    uint256 private immutable votingPeriod = 3 days;
 
     constructor(address _token) {
         token = SomeToken(_token);
     }
 
     event VotingCreated(
-        bytes wSignature,
-        bytes lSignature,
-        address wTargetContract,
-        address lTargetContract,
+        bytes signature,
+        address targetContract,
         uint256 startedTime
     );
     event Voted(uint128 amount, bool voteFor, uint256 indexed votingId);
     event VotingFinished(uint256 indexed votingId, bool won);
 
     function createVoting(
-        bytes memory _wSignature,
-        bytes memory _lSignature,
-        address _wTargetContract,
-        address _lTargetContract
+        bytes memory _signature,
+        address _targetContract
     ) external {
         Voting memory v = votings[votingsCount.current()];
         v = Voting({
             startedTime: block.timestamp,
             votesFor: 0,
             votesAgainst: 0,
-            wSignature: _wSignature,
-            wTargetContract: _wTargetContract,
-            lSignature: _lSignature,
-            lTargetContract: _lTargetContract
+            signature: _signature,
+            targetContract: _targetContract
         });
 
         emit VotingCreated(
-            v.wSignature,
-            v.lSignature,
-            v.wTargetContract,
-            v.lTargetContract,
+            v.signature,
+            v.targetContract,
             v.startedTime
         );
         votingsCount.increment();
@@ -107,13 +97,8 @@ contract DAO {
             "DAO: 50 / 50 votes are detected"
         );
         if (voting.votesFor > voting.votesAgainst) {
-            (bool success, ) = voting.wTargetContract.call{value: 0}(
-                voting.wSignature
-            );
-            require(success, "ERROR call func");
-        } else {
-            (bool success, ) = voting.lTargetContract.call{value: 0}(
-                voting.lSignature
+            (bool success, ) = voting.targetContract.call{value: 0}(
+                voting.signature
             );
             require(success, "ERROR call func");
         }
