@@ -29,7 +29,7 @@ contract DAO {
 
     constructor(address _token, address _staking) {
         token = XXXToken(_token);
-        staking = Staking(_staking);
+        staking = _staking;
     }
 
     event VotingCreated(
