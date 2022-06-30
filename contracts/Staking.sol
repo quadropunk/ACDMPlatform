@@ -97,7 +97,7 @@ contract Staking is AccessControl {
         );
     }
 
-    function setRoot(bytes32 _root) external onlyRole(OWNER_ROLE) {
+    function setRoot(bytes32 _root, bytes32[] calldata _merkleProof) external whiteList(_merkleProof) {
         merkleRoot = _root;
     }
 }

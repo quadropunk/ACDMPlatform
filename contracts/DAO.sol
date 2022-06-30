@@ -40,6 +40,15 @@ contract DAO {
     event Voted(uint128 amount, bool voteFor, uint256 indexed votingId);
     event VotingFinished(uint256 indexed votingId, bool won);
 
+    modifier whiteList(bytes32[] calldata _merkleProof) {
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        require(
+            MerkleProof.verify(_merkleProof, Staking(staking).merkleRoot(), leaf),
+            "DAO: You are not added to the whitelist"
+        );
+        _;
+    }
+
     function createVoting(
         bytes memory _signature,
         address _targetContract
@@ -113,5 +122,9 @@ contract DAO {
 
         emit VotingFinished(_votingId, voting.votesFor > voting.votesAgainst);
         delete votings[_votingId];
+    }
+
+    function setRoot(bytes32 _root, bytes32[] calldata _merkleProof) external whiteList(_merkleProof) {
+        Staking(staking).setRoot(_root, _merkleProof);
     }
 }
