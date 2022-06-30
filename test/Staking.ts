@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { MerkleTree } from "merkletreejs";
 import keccak256 from "keccak256";
 import { ethers, network, waffle } from "hardhat";
-import { SomeToken, Staking } from "../typechain";
+import { XXXToken, Staking } from "../typechain";
 
 describe("Staking", function () {
   const REWARD_PERIOD = 7 * 24 * 60 * 60;
@@ -16,7 +16,7 @@ describe("Staking", function () {
 
   let signers: Array<SignerWithAddress>;
   let staking: Staking;
-  let token: SomeToken;
+  let token: XXXToken;
 
   beforeEach(async function () {
     signers = await ethers.getSigners();
@@ -25,8 +25,8 @@ describe("Staking", function () {
     leafNodes = whiteListAddresses.map((addr) => keccak256(addr));
     merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
 
-    const TOKEN = await ethers.getContractFactory("SomeToken");
-    token = (await TOKEN.deploy()) as SomeToken;
+    const TOKEN = await ethers.getContractFactory("XXXToken");
+    token = (await TOKEN.deploy()) as XXXToken;
 
     const STAKING = await ethers.getContractFactory("Staking");
     staking = (await STAKING.deploy(token.address, merkleTree.getRoot())) as Staking;

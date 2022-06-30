@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import "./token/ACDMToken.sol";
-import "hardhat/console.sol";
 
 contract ACDMPlatform {
     enum Rounds {

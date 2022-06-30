@@ -3,12 +3,12 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "./token/SomeToken.sol";
+import "./token/XXXToken.sol";
 
 contract Staking is AccessControl {
-    bytes32 constant OWNER_ROLE = keccak256("OWNER_ROLE");
+    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
-    SomeToken public immutable token;
+    XXXToken public immutable token;
 
     uint256 public immutable lockPeriod = 1 weeks;
     uint256 public immutable rewardPeriod = 1 weeks;
@@ -19,7 +19,7 @@ contract Staking is AccessControl {
     mapping(address => uint256) public startedTime;
 
     constructor(address _token, bytes32 _merkleRoot) {
-        token = SomeToken(_token);
+        token = XXXToken(_token);
         merkleRoot = _merkleRoot;
         _grantRole(OWNER_ROLE, _msgSender());
     }

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./token/SomeToken.sol";
+import "./token/XXXToken.sol";
 
 contract DAO {
     using Counters for Counters.Counter;
@@ -15,7 +15,7 @@ contract DAO {
         address targetContract;
     }
 
-    SomeToken public immutable token;
+    XXXToken public immutable token;
     uint256 private immutable votingPeriod = 3 days;
 
     Counters.Counter private votingsCount;
@@ -25,7 +25,7 @@ contract DAO {
     mapping(address => mapping(uint256 => uint128)) public balances;
 
     constructor(address _token) {
-        token = SomeToken(_token);
+        token = XXXToken(_token);
     }
 
     event VotingCreated(
