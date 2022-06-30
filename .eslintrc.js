@@ -18,7 +18,13 @@ module.exports = {
   rules: {
     "node/no-unsupported-features/es-syntax": [
       "error",
-      { ignores: ["modules"] },
+      { ignores: ["modules"], endOfLine: "auto" },
     ],
   },
+  'prettier/prettier': [
+    'error',
+    {
+      'endOfLine': 'auto',
+    }
+  ]
 };
