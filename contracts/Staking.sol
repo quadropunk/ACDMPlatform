@@ -4,23 +4,25 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./token/XXXToken.sol";
+import "./DAO.sol";
 
 contract Staking is AccessControl {
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
     XXXToken public immutable token;
 
-    uint256 public immutable lockPeriod = 1 weeks;
     uint256 public immutable rewardPeriod = 1 weeks;
+    address public immutable dao;
     uint256 private immutable rewardRate = 3;
 
     bytes32 public merkleRoot;
     mapping(address => uint256) public stakers;
     mapping(address => uint256) public startedTime;
 
-    constructor(address _token, bytes32 _merkleRoot) {
+    constructor(address _token, bytes32 _merkleRoot, address _dao) {
         token = XXXToken(_token);
         merkleRoot = _merkleRoot;
+        dao = _dao;
         _grantRole(OWNER_ROLE, _msgSender());
     }
 
@@ -58,7 +60,7 @@ contract Staking is AccessControl {
     function unstake() external {
         require(stakers[_msgSender()] != 0, "Staking: You've not staked");
         require(
-            startedTime[_msgSender()] + lockPeriod < block.timestamp,
+            startedTime[_msgSender()] + DAO(dao).lastVotingEndTime(_msgSender()) < block.timestamp,
             "Staking: Lock period is still on"
         );
 

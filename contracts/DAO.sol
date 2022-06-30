@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "./Staking.sol";
 import "./token/XXXToken.sol";
 
 contract DAO {
@@ -16,16 +17,19 @@ contract DAO {
     }
 
     XXXToken public immutable token;
+    address public immutable staking;
     uint256 private immutable votingPeriod = 3 days;
 
     Counters.Counter private votingsCount;
 
     mapping(uint256 => Voting) public votings;
+    mapping(address => uint256) public lastVotingEndTime;
     mapping(uint256 => mapping(address => bool)) public voters;
     mapping(address => mapping(uint256 => uint128)) public balances;
 
-    constructor(address _token) {
+    constructor(address _token, address _staking) {
         token = XXXToken(_token);
+        staking = Staking(_staking);
     }
 
     event VotingCreated(
@@ -71,12 +75,16 @@ contract DAO {
             votings[_votingId].startedTime != 0,
             "DAO: Voting with such id does not exist"
         );
+        require(Staking(staking).stakers(msg.sender) >= _amount, "Staking: Not enough LP tokens");
 
-        token.transferFrom(msg.sender, address(this), _amount);
+        token.transferFrom(staking, address(this), _amount);
         balances[msg.sender][_votingId] = _amount;
         Voting storage voting = votings[_votingId];
+
         if (_voteFor == true) voting.votesFor += _amount;
         else voting.votesAgainst += _amount;
+
+        lastVotingEndTime[msg.sender] = voting.startedTime + votingPeriod;
 
         emit Voted(_amount, _voteFor, _votingId);
     }
