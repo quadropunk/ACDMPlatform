@@ -7,23 +7,25 @@ import "./token/XXXToken.sol";
 import "./DAO.sol";
 
 contract Staking is AccessControl {
-    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
+    bytes32 public constant DAO_ROLE = keccak256("DAO_ROLE");
 
     XXXToken public immutable token;
 
     uint128 public immutable rewardPeriod = 1 weeks;
-    address public immutable dao;
     uint128 private immutable rewardRate = 3;
+    address private immutable dao;
 
     bytes32 public merkleRoot;
     mapping(address => uint128) public stakers;
     mapping(address => uint128) public startedTime;
 
-    constructor(address _token, bytes32 _merkleRoot, address _dao) {
-        token = XXXToken(_token);
-        merkleRoot = _merkleRoot;
-        dao = _dao;
-        _grantRole(OWNER_ROLE, _msgSender());
+    constructor(
+        address _token,
+        bytes32 _merkleRoot,
+        address _dao
+    ) {
+        (token, merkleRoot, dao) = (XXXToken(_token), _merkleRoot, _dao);
+        _grantRole(DAO_ROLE, _dao);
     }
 
     event Staked(address to, uint256 amount, uint256 startedTime);
@@ -39,10 +41,10 @@ contract Staking is AccessControl {
         _;
     }
 
-    function stake(
-        uint128 _amount,
-        bytes32[] calldata _merkleProof
-    ) external whiteList(_merkleProof) {
+    function stake(uint128 _amount, bytes32[] calldata _merkleProof)
+        external
+        whiteList(_merkleProof)
+    {
         require(_amount != 0, "Staking: Cannot stake zero tokens");
         require(stakers[_msgSender()] == 0, "Staking: You've already staked");
 
@@ -60,8 +62,10 @@ contract Staking is AccessControl {
     function unstake() external {
         require(stakers[_msgSender()] != 0, "Staking: You've not staked");
         require(
-            startedTime[_msgSender()] + DAO(dao).lastVotingEndTime(_msgSender()) < block.timestamp,
-            "Staking: Lock period is still on"
+            startedTime[_msgSender()] +
+                DAO(dao).lastVotingEndTime(_msgSender()) <
+                block.timestamp,
+            "Staking: You cannot unstake till you vote"
         );
 
         token.transfer(_msgSender(), stakers[_msgSender()]);
@@ -97,7 +101,10 @@ contract Staking is AccessControl {
         );
     }
 
-    function setRoot(bytes32 _root, bytes32[] calldata _merkleProof) external whiteList(_merkleProof) {
+    function setRoot(bytes32 _root)
+        external
+        onlyRole(DAO_ROLE)
+    {
         merkleRoot = _root;
     }
 }

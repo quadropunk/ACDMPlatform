@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./Staking.sol";
+import "hardhat/console.sol";
 import "./token/XXXToken.sol";
 
 contract DAO {
@@ -27,9 +28,10 @@ contract DAO {
     mapping(uint256 => mapping(address => bool)) public voters;
     mapping(address => mapping(uint256 => uint128)) public balances;
 
-    constructor(address _token, address _staking) {
+    constructor(address _token, bytes32 _merkleRoot) {
         token = XXXToken(_token);
-        staking = _staking;
+        Staking stakingContract = new Staking(_token, _merkleRoot, address(this));
+        staking = address(stakingContract);
     }
 
     event VotingCreated(
@@ -53,8 +55,7 @@ contract DAO {
         bytes memory _signature,
         address _targetContract
     ) external {
-        Voting memory v = votings[votingsCount.current()];
-        v = Voting({
+        votings[votingsCount.current()] = Voting({
             startedTime: block.timestamp,
             votesFor: 0,
             votesAgainst: 0,
@@ -63,9 +64,9 @@ contract DAO {
         });
 
         emit VotingCreated(
-            v.signature,
-            v.targetContract,
-            v.startedTime
+            votings[votingsCount.current()].signature,
+            votings[votingsCount.current()].targetContract,
+            votings[votingsCount.current()].startedTime
         );
         votingsCount.increment();
     }
@@ -92,6 +93,7 @@ contract DAO {
         else voting.votesAgainst += amount;
 
         lastVotingEndTime[msg.sender] = voting.startedTime + votingPeriod;
+        voters[_votingId][msg.sender] = true;
 
         emit Voted(amount, _voteFor, _votingId);
     }
@@ -120,9 +122,5 @@ contract DAO {
 
         emit VotingFinished(_votingId, voting.votesFor > voting.votesAgainst);
         delete votings[_votingId];
-    }
-
-    function setRoot(bytes32 _root, bytes32[] calldata _merkleProof) external whiteList(_merkleProof) {
-        Staking(staking).setRoot(_root, _merkleProof);
     }
 }
