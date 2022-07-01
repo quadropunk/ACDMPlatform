@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./Staking.sol";
-import "hardhat/console.sol";
 import "./token/XXXToken.sol";
 
 contract DAO {
