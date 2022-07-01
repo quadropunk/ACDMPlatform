@@ -183,7 +183,7 @@ contract ACDMPlatform {
         }
         token.transfer(msg.sender, toSend);
         emit OrderRedeemed(_from, msg.sender, orderBook[_from]);
-        orderBook[_from] = 0;
+        orderBook[_from] -= tokensAmount;
     }
 
     receive() external payable {}
