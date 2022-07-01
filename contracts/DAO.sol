@@ -71,7 +71,6 @@ contract DAO {
     }
 
     function vote(
-        uint128 _amount,
         bool _voteFor,
         uint256 _votingId
     ) external {
@@ -79,23 +78,22 @@ contract DAO {
             voters[_votingId][msg.sender] == false,
             "DAO: You have already voted"
         );
-        require(_amount != 0, "DAO: Cannot vote with zero tokens");
+        require(Staking(staking).stakers(msg.sender) != 0, "DAO: Cannot vote with zero tokens");
         require(
             votings[_votingId].startedTime != 0,
             "DAO: Voting with such id does not exist"
         );
-        require(Staking(staking).stakers(msg.sender) >= _amount, "Staking: Not enough LP tokens");
 
-        token.transferFrom(staking, address(this), _amount);
-        balances[msg.sender][_votingId] = _amount;
+        uint128 amount = Staking(staking).stakers(msg.sender);
+        balances[msg.sender][_votingId] = amount;
         Voting storage voting = votings[_votingId];
 
-        if (_voteFor == true) voting.votesFor += _amount;
-        else voting.votesAgainst += _amount;
+        if (_voteFor == true) voting.votesFor += amount;
+        else voting.votesAgainst += amount;
 
         lastVotingEndTime[msg.sender] = voting.startedTime + votingPeriod;
 
-        emit Voted(_amount, _voteFor, _votingId);
+        emit Voted(amount, _voteFor, _votingId);
     }
 
     function finishVoting(uint256 _votingId) external {

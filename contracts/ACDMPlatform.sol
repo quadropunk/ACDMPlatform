@@ -145,7 +145,7 @@ contract ACDMPlatform {
         );
         token.transfer(msg.sender, orderBook[msg.sender]);
         emit OrderRemoved(msg.sender, orderBook[msg.sender]);
-        orderBook[msg.sender] = 0;
+        delete orderBook[msg.sender];
     }
 
     function redeemOrder(address _from)

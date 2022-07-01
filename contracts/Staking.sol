@@ -11,13 +11,13 @@ contract Staking is AccessControl {
 
     XXXToken public immutable token;
 
-    uint256 public immutable rewardPeriod = 1 weeks;
+    uint128 public immutable rewardPeriod = 1 weeks;
     address public immutable dao;
-    uint256 private immutable rewardRate = 3;
+    uint128 private immutable rewardRate = 3;
 
     bytes32 public merkleRoot;
-    mapping(address => uint256) public stakers;
-    mapping(address => uint256) public startedTime;
+    mapping(address => uint128) public stakers;
+    mapping(address => uint128) public startedTime;
 
     constructor(address _token, bytes32 _merkleRoot, address _dao) {
         token = XXXToken(_token);
@@ -40,7 +40,7 @@ contract Staking is AccessControl {
     }
 
     function stake(
-        uint256 _amount,
+        uint128 _amount,
         bytes32[] calldata _merkleProof
     ) external whiteList(_merkleProof) {
         require(_amount != 0, "Staking: Cannot stake zero tokens");
@@ -48,7 +48,7 @@ contract Staking is AccessControl {
 
         token.transferFrom(_msgSender(), address(this), _amount);
         stakers[_msgSender()] = _amount;
-        startedTime[_msgSender()] = block.timestamp;
+        startedTime[_msgSender()] = uint128(block.timestamp);
 
         emit Staked(
             _msgSender(),
@@ -83,8 +83,8 @@ contract Staking is AccessControl {
             "Staking: Reward period is not over yet"
         );
 
-        uint256 periods = (block.timestamp - startedTime[_msgSender()]) /
-            rewardPeriod;
+        uint128 time = uint128(block.timestamp);
+        uint128 periods = (time - startedTime[_msgSender()]) / rewardPeriod;
         stakers[_msgSender()] +=
             (stakers[_msgSender()] * (rewardRate * periods)) /
             100;
