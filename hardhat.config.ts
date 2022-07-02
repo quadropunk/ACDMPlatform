@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
 
+import "hardhat-docgen";
 import "hardhat-contract-sizer";
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
@@ -25,6 +26,11 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
+  docgen: {
+    path: "./docs",
+    clear: true,
+    runOnCompile: true,
+  }
 };
 
 export default config;
