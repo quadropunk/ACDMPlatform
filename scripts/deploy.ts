@@ -1,4 +1,6 @@
 import { ethers } from "hardhat";
+import hre from "hardhat";
+import "hardhat-deploy";
 import { MerkleTree } from "merkletreejs";
 import keccak256 from "keccak256";
 
@@ -28,6 +30,7 @@ async function main() {
   const whiteListAddresses = signers.filter((_, index) => index < 5).map((signer) => signer.address);
   const leafNodes = whiteListAddresses.map((addr) => keccak256(addr));
   const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
+  console.log(merkleTree.getRoot().toJSON());
 
   const DAO = await ethers.getContractFactory("DAO");
   const dao = await DAO.deploy(xxxToken.address, merkleTree.getRoot());
@@ -35,22 +38,6 @@ async function main() {
 
   console.log(`DAO deployed with ${dao.address} address`);
   console.log(`Staking deployed with ${await dao.staking()} address`);
-  
-  const deployments = await .deployments.all();
-  console.log(deployments);
-
-  for (const contract in deployments) {
-    if (deployments.hasOwnProperty(contract)) {
-      const deployment = deployments[contract];
-      console.log(`Verifying ${contract} (${deployment.address})...`);
-
-      await hre.run("verify:verify", {
-        address: deployment.address,
-        constructorArguments: deployment.args,
-        libraries: deployment.libraries
-      });
-    }
-  }
 }
 
 main().catch((error) => {
