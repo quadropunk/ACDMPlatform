@@ -1,4 +1,5 @@
 import * as dotenv from "dotenv";
+import "./tasks/index.ts";
 
 import "hardhat-docgen";
 import "hardhat-contract-sizer";
