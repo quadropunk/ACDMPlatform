@@ -41,26 +41,17 @@ contract DAO {
     event Voted(uint128 amount, bool voteFor, uint256 indexed votingId);
     event VotingFinished(uint256 indexed votingId, bool won);
 
-    modifier whiteList(bytes32[] calldata _merkleProof) {
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(
-            MerkleProof.verify(_merkleProof, Staking(staking).merkleRoot(), leaf),
-            "DAO: You are not added to the whitelist"
-        );
-        _;
-    }
-
     function createVoting(
         bytes memory _signature,
         address _targetContract
     ) external {
-        votings[votingsCount.current()] = Voting({
-            startedTime: block.timestamp,
-            votesFor: 0,
-            votesAgainst: 0,
-            signature: _signature,
-            targetContract: _targetContract
-        });
+        votings[votingsCount.current()] = Voting(
+            block.timestamp,
+            0,
+            0,
+            _signature,
+            _targetContract
+        );
 
         emit VotingCreated(
             votings[votingsCount.current()].signature,
@@ -108,10 +99,6 @@ contract DAO {
         );
         Voting storage voting = votings[_votingId];
 
-        require(
-            voting.votesAgainst != voting.votesFor,
-            "DAO: 50 / 50 votes are detected"
-        );
         if (voting.votesFor > voting.votesAgainst) {
             (bool success, ) = voting.targetContract.call{value: 0}(
                 voting.signature

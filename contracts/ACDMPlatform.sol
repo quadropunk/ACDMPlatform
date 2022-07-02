@@ -130,7 +130,7 @@ contract ACDMPlatform {
             "ACDMPlatform: Trade round is not started yet"
         );
         token.transferFrom(msg.sender, address(this), _amount);
-        orderBook[msg.sender] = _amount;
+        orderBook[msg.sender] += _amount;
         emit OrderAdded(msg.sender, _amount);
     }
 

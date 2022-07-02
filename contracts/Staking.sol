@@ -62,9 +62,7 @@ contract Staking is AccessControl {
     function unstake() external {
         require(stakers[_msgSender()] != 0, "Staking: You've not staked");
         require(
-            startedTime[_msgSender()] +
-                DAO(dao).lastVotingEndTime(_msgSender()) <
-                block.timestamp,
+            DAO(dao).lastVotingEndTime(_msgSender()) < block.timestamp,
             "Staking: You cannot unstake till you vote"
         );
 
@@ -101,10 +99,7 @@ contract Staking is AccessControl {
         );
     }
 
-    function setRoot(bytes32 _root)
-        external
-        onlyRole(DAO_ROLE)
-    {
+    function setRoot(bytes32 _root) external onlyRole(DAO_ROLE) {
         merkleRoot = _root;
     }
 }

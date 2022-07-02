@@ -259,12 +259,34 @@ describe("Staking", function () {
     });
 
     it("Should revert if lock period is not over yet", async function () {
+      const targetContract = staking.address;
+      const iface = new ethers.utils.Interface([{
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "_root",
+            "type": "bytes32"
+          }
+        ],
+        "name": "setRoot",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }]);
+
+      const signature = iface.encodeFunctionData("setRoot", [merkleTree.getRoot()]);
+
+      await dao.createVoting(signature, targetContract);
       await token.approve(staking.address, stakeAmount);
+
       const merkleProof = merkleTree.getHexProof(keccak256(signers[0].address));
       await staking.stake(stakeAmount, merkleProof);
-      // await expect(staking.unstake()).to.be.revertedWith(
-      //   "Staking: Lock period is still on"
-      // );
+
+      await dao.vote(true, 0);
+
+      await expect(staking.unstake()).to.be.revertedWith(
+        "Staking: You cannot unstake till you vote"
+      );
     });
 
     it("Should unstake", async function () {
